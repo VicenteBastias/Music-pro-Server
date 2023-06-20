@@ -3,7 +3,9 @@ const app = express()
 const cors = require('cors');
 app.use(cors());
 const mysql = require('mysql');
-
+const axios = require('axios');
+const httpConfig = require('./http');
+const service = require('./service');
 
 const con = mysql.createConnection({
     host:"localhost",
@@ -17,7 +19,7 @@ const con = mysql.createConnection({
     res.setHeader('Content-Type', 'application/json')
     res.json({"users": ["userOne", "userTwo", "userThree","uwu"] })
 })*/
-
+httpConfig(app)
 app.listen(5000, () => {console.log("Server stated on port 5000")})
 
 app.get("/login", (req,res)=>{
@@ -48,7 +50,7 @@ app.get("/tarjeta", (req,res) =>{
         con.query(dbCheck, function(err,data){
             if (err) {
                 console.log(err)
-                res.status(02)
+                res.status(400)
                 throw err; 
                }
             else{
@@ -65,15 +67,15 @@ app.get("/tarjeta", (req,res) =>{
 app.get("/tarjetaSaldo", (req,res) =>{
     res.setHeader('Content-Type', 'application/json')
     try{     
-        var dbCheck = `select * from tarjetas where id_usuario = '1'`
+        var dbCheck = `select * from tarjetas where id_usuario = ${req.query.id_usuario}`
         con.query(dbCheck, function(err,data){
             console.log(req.query.monto)
             let saldoNuevo = parseInt(data[0].saldo) + parseInt(req.query.monto)
-            var dbInsert = `update tarjetas set saldo = '${saldoNuevo}' where id_usuario = '1' `
+            var dbInsert = `update tarjetas set saldo = '${saldoNuevo}' where id_usuario = '${req.query.id_usuario}' `
             response = con.query(dbInsert)
             if (err) {
                 console.log(err)
-                res.status(02)
+                res.status(400)
                 throw err; 
                }
             else{
@@ -95,7 +97,7 @@ app.get("/Api", (req,res) =>{
             console.log(JSON.stringify(data))
             if (err) {
                 console.log(err)
-                res.status(02)
+                res.status(400)
                 throw err; 
                }
             else{
@@ -108,6 +110,38 @@ app.get("/Api", (req,res) =>{
         console.log(ex)
     }
 });
+app.post("/Transferencia", (req, res) => {
+    const nroTarjeta = req.body.nroTarjeta;
+    const monto = req.body.monto;
+    console.log(nroTarjeta, monto);
+    try {
+      const dbCheck = `select * from tarjetas where nro='${nroTarjeta}'`;
+      con.query(dbCheck, function (err, data) {
+        console.log(JSON.stringify(data));
+        let saldo = data[0].saldo + parseInt(monto);
+        const dbInsert = `update tarjetas set saldo = ${saldo} where nro='${nroTarjeta}'`;
+        con.query(dbInsert);
+        if (err) {
+          console.log(err);
+          res.status(400).send("Error en la solicitud"); // Enviar una respuesta con error
+        } else {
+          res.status(200).send("Transferencia exitosa"); // Enviar una respuesta exitosa
+        }
+      });
+    } catch (ex) {
+      console.log(ex);
+      res.status(500).send("Error en el servidor"); // Enviar una respuesta con error del servidor
+    }
+  });
+
+
+  app.post("/TransferenciaExterno", (req, res) => {
+    service.hacerTransferencia(req.body.monto, req.body.nroTarjeta)
+    res.status(200).send("Transferencia Realizada")
+  });
+
+
+
 
 
     
