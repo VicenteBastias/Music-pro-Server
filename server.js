@@ -135,9 +135,30 @@ app.post("/Transferencia", (req, res) => {
   });
 
 
-  app.post("/TransferenciaExterno", (req, res) => {
-    service.hacerTransferencia(req.body.monto, req.body.nroTarjeta)
-    res.status(200).send("Transferencia Realizada")
+app.get("/TransferenciaExterno", (req, res) => {
+    service.hacerTransferencia( req.body.monto)
+    const usuario = req.query.idUsuario;
+    const monto = req.query.monto
+    console.log(req.query.tarjet, monto);
+    try {
+        var dbCheck = `select * from tarjetas where id_usuario = ${usuario}`
+        con.query(dbCheck, function(err,data){
+            console.log(req.query.monto)
+            let saldoNuevo = parseInt(data[0].saldo) - parseInt(monto)
+            var dbInsert = `update tarjetas set saldo = '${saldoNuevo}' where id_usuario = '${usuario}' `
+            response = con.query(dbInsert)
+            if (err) {
+                console.log(err)
+                res.status(400)
+                throw err; 
+               }
+            else{
+                res.status(200).json(data);
+            }
+        });
+    } catch (ex) {
+      console.log(ex);
+    }
   });
 
 
