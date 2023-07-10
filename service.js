@@ -1,22 +1,23 @@
 const axios = require('axios');
 
-async function hacerTransferencia(monto, nroTarjeta, userId, callback) {
+async function hacerTransferencia(nroTarjeta,tarjeta_destino, comentario, monto) {
+    console.log(tarjeta_destino)
     try {
-    const response = await axios.get(`https://musicpro.bemtorres.win/api/v1/tarjeta/transferir_get`, {
-        params:{
-            userId: 1,
-            secret_key: 1,
-            monto: monto,
-            callback: 1,
-            nroTarjeta: nroTarjeta
-
-
+        if (monto <= 0) {
+          throw new Error('El monto tiene que ser mayor a 0');
         }
+        const response = await axios.post(`https://musicpro.bemtorres.win/api/v1/tarjeta/transferir`, {
+            tarjeta_origen: nroTarjeta,
+            tarjeta_destino: tarjeta_destino,
+            comentario: comentario,
+            monto: monto,
+            codigo: "FREECODE",
+            token: "FREECODE123"    
     });
-    
+
     console.log(response.data); 
     } catch (error) {
-    console.error(error); 
+    console.error(error.message); 
     }
 }
 module.exports ={

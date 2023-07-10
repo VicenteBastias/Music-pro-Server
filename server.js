@@ -120,12 +120,12 @@ app.post("/Transferencia", (req, res) => {
         console.log(JSON.stringify(data));
         let saldo = data[0].saldo + parseInt(monto);
         const dbInsert = `update tarjetas set saldo = ${saldo} where nro='${nroTarjeta}'`;
-        con.query(dbInsert);
         if (err) {
           console.log(err);
           res.status(400).send("Error en la solicitud"); // Enviar una respuesta con error
         } else {
           res.status(200).send("Transferencia exitosa"); // Enviar una respuesta exitosa
+          con.query(dbInsert);
         }
       });
     } catch (ex) {
@@ -135,15 +135,16 @@ app.post("/Transferencia", (req, res) => {
   });
 
 
-app.get("/TransferenciaExterno", (req, res) => {
-    service.hacerTransferencia( req.body.monto)
+app.get("/TransferenciaExterno", (req, res) => { 
     const usuario = req.query.idUsuario;
-    const monto = req.query.monto
-    console.log(req.query.tarjet, monto);
+    const monto = parseInt(req.query.monto)
+    const comentario = req.query.comentario
+    const tarjeta_destino = req.query.tarjetaDestino
     try {
         var dbCheck = `select * from tarjetas where id_usuario = ${usuario}`
         con.query(dbCheck, function(err,data){
-            console.log(req.query.monto)
+            let nro_Tarjeta = data[0].id
+            service.hacerTransferencia(nro_Tarjeta, tarjeta_destino, comentario, monto)
             let saldoNuevo = parseInt(data[0].saldo) - parseInt(monto)
             var dbInsert = `update tarjetas set saldo = '${saldoNuevo}' where id_usuario = '${usuario}' `
             response = con.query(dbInsert)
