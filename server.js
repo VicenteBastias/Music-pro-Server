@@ -3,7 +3,6 @@ const app = express()
 const cors = require('cors');
 app.use(cors());
 const mysql = require('mysql');
-const axios = require('axios');
 const httpConfig = require('./http');
 const service = require('./service');
 
@@ -89,12 +88,11 @@ app.get("/tarjetaSaldo", (req,res) =>{
     }
 });
 
-app.get("/Api", (req,res) =>{
+app.get("/Historial", (req,res) =>{
     res.setHeader('Content-Type', 'application/json')
     try{     
-        var dbCheck = `select * from usuarios`
+        var dbCheck = `select * from transferencia where id_usuario = ${req.query.id_usuario}`
         con.query(dbCheck, function(err,data){
-            console.log(JSON.stringify(data))
             if (err) {
                 console.log(err)
                 res.status(400)
@@ -110,6 +108,7 @@ app.get("/Api", (req,res) =>{
         console.log(ex)
     }
 });
+
 app.post("/Transferencia", (req, res) => {
     const nroTarjeta = req.body.nroTarjeta;
     const monto = req.body.monto;
@@ -144,7 +143,7 @@ app.get("/TransferenciaExterno", (req, res) => {
         var dbCheck = `select * from tarjetas where id_usuario = ${usuario}`
         con.query(dbCheck, function(err,data){
             let nro_Tarjeta = data[0].id
-            service.hacerTransferencia(nro_Tarjeta, tarjeta_destino, comentario, monto)
+            service.hacerTransferencia(nro_Tarjeta, tarjeta_destino, comentario, monto, usuario)
             let saldoNuevo = parseInt(data[0].saldo) - parseInt(monto)
             var dbInsert = `update tarjetas set saldo = '${saldoNuevo}' where id_usuario = '${usuario}' `
             response = con.query(dbInsert)
